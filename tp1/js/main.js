@@ -1,193 +1,238 @@
 import * as THREE from 'three';
 
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-
+import { GUI } from '/libs/gui/dat.gui.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { TeapotGeometry } from 'three/addons/geometries/TeapotGeometry.js';
 
-let camera, scene, renderer;
-let cameraControls;
-let effectController;
-const teapotSize = 300;
-let ambientLight, light;
+import geometries from './geometries.js';
+import Printer from './printer.js';
+import Forklift from './forklift.js';
+import bindInputHandlers from './input.js';
+import Shelves from './shelves.js';
+import { createWarehouse } from './warehouse.js';
 
-let tess = - 1;  // force initialization
-let bBottom;
-let bLid;
-let bBody;
-let bFitLid;
-let bNonBlinn;
-let shading;
+const initWindowRatio = window.innerWidth / window.innerHeight;
 
-let teapot, textureCube;
-const materials = {};
+const materials = {
+  wireframe:  new THREE.MeshBasicMaterial({ wireframe: true }),
+  flat:       new THREE.MeshPhongMaterial({ specular: 0x000000, flatShading: true, side: THREE.DoubleSide }),
+  smooth:     new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }),
+  glossy:     new THREE.MeshPhongMaterial({ color: 0xAA0000, side: THREE.DoubleSide }),
+};
 
-init();
-render();
+const guiController = {
+  geoCode:        'B1',
+  geoAngle:       180,
+  geoHeight:      30,
+  geoWidth:       10,
+  geoResolution:  100,
+  geoMaterial:    'glossy',
+  render:         () => printer.renderPiece(
+    geometries[guiController.geoCode],
+    guiController.geoHeight,
+    guiController.geoWidth,
+    guiController.geoResolution,
+    guiController.geoAngle,
+    materials[guiController.geoMaterial],
+  ),
+};
 
-function init() {
+const printer = new Printer(
+  new THREE.Vector3(-100, 0, 0),
+  50/3,
+  40/3,
+  100/3
+);
+const forklift = new Forklift(
+  new THREE.Vector3(0, 0, 0),
+  100,
+  30,
+  60,
+);
+const shelves = new Shelves(
+  new THREE.Vector3(100, 0, 80),
+  2,
+  8
+);
 
-  const container = document.createElement( 'div' );
-  document.body.appendChild( container );
-
-  const canvasWidth = window.innerWidth;
-  const canvasHeight = window.innerHeight;
-
-  // CAMERA
-  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 80000 );
-  camera.position.set( - 600, 550, 1300 );
-
-  // LIGHTS
-  ambientLight = new THREE.AmbientLight( 0x333333 );
-
-  light = new THREE.DirectionalLight( 0xFFFFFF, 1.0 );
-  light.position.set( 0.32, 0.39, 0.7 );
-
-  // RENDERER
-  renderer = new THREE.WebGLRenderer( { antialias: true } );
-  renderer.setPixelRatio( window.devicePixelRatio );
-  renderer.setSize( canvasWidth, canvasHeight );
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  container.appendChild( renderer.domElement );
-
-  // EVENTS
-  window.addEventListener( 'resize', onWindowResize );
-
-  // CONTROLS
-  cameraControls = new OrbitControls( camera, renderer.domElement );
-  cameraControls.addEventListener( 'change', render );
-
-  // TEXTURE MAP
-  const textureMap = new THREE.TextureLoader().load( 'textures/uv_grid_opengl.jpg' );
-  textureMap.wrapS = textureMap.wrapT = THREE.RepeatWrapping;
-  textureMap.anisotropy = 16;
-  textureMap.encoding = THREE.sRGBEncoding;
-
-  // REFLECTION MAP
-  const path = 'textures/cube/pisa/';
-  const urls = [ 'px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png' ];
-
-  textureCube = new THREE.CubeTextureLoader().setPath( path ).load( urls );
-  textureCube.encoding = THREE.sRGBEncoding;
-
-  materials[ 'wireframe' ] = new THREE.MeshBasicMaterial( { wireframe: true } );
-  materials[ 'flat' ] = new THREE.MeshPhongMaterial( { specular: 0x000000, flatShading: true, side: THREE.DoubleSide } );
-  materials[ 'smooth' ] = new THREE.MeshLambertMaterial( { side: THREE.DoubleSide } );
-  materials[ 'glossy' ] = new THREE.MeshPhongMaterial( { side: THREE.DoubleSide } );
-  materials[ 'textured' ] = new THREE.MeshPhongMaterial( { map: textureMap, side: THREE.DoubleSide } );
-  materials[ 'reflective' ] = new THREE.MeshPhongMaterial( { envMap: textureCube, side: THREE.DoubleSide } );
-
-  // scene itself
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color( 0xAAAAAA );
-
-  scene.add( ambientLight );
-  scene.add( light );
-
-  // GUI
-  setupGui();
-
+const customCams = {
+  carDriver:  createDriverCamera(),
+  carBack:    createBackCamera(),
+  carSide:    createSideCamera(),
 }
 
-// EVENT HANDLERS
+let baseCamera, cameraControls;
+let scene, renderer, camera;
 
-function onWindowResize() {
+;(function() {
+  const container = document.getElementById('container');
 
-  const canvasWidth = window.innerWidth;
-  const canvasHeight = window.innerHeight;
+  const canvasWidth   = window.innerWidth;
+  const canvasHeight  = window.innerHeight;
 
-  renderer.setSize( canvasWidth, canvasHeight );
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(canvasWidth, canvasHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  container.appendChild(renderer.domElement);
 
-  camera.aspect = canvasWidth / canvasHeight;
-  camera.updateProjectionMatrix();
+  // Camera
+  baseCamera = new THREE.PerspectiveCamera(100, initWindowRatio, 1, 800);
+
+  // Camera controlls
+  cameraControls = new OrbitControls(baseCamera, renderer.domElement);
+  cameraControls.minDistance = 50;
+  cameraControls.maxDistance = 400;
+  cameraControls.enablePan = false;
+
+  // Default camera
+  setSceneCamera();
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x333333);
+  const light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+  light.position.set(32, 39, 70);
+
+  // Resize
+  window.addEventListener('resize', onWindowResize);
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+
+  scene.add(ambientLight);
+  scene.add(light);
+
+  scene.add(printer.mesh);
+  scene.add(forklift.mesh);
+  scene.add(shelves.mesh);
+  scene.add(createWarehouse(3000, 400))
+
+  setupGui();
+
+  bindInputHandlers({
+    KeyW:   { down: () => forklift.startForward(),        up: () => forklift.stop()     },
+    KeyS:   { down: () => forklift.startBackwards(),      up: () => forklift.stop()     },
+    KeyA:   { down: () => forklift.rotateLeft(),          up: () => forklift.stopRot()  },
+    KeyD:   { down: () => forklift.rotateRight(),         up: () => forklift.stopRot()  },
+    KeyQ:   { down: () => forklift.startLiftUp(),         up: () => forklift.stopLift() },
+    KeyE:   { down: () => forklift.startLiftDown(),       up: () => forklift.stopLift() },
+    KeyG:   { down: () => forklift.handlePiece(availableSlots()), up: () => {}          },
+    Digit1: { down: () => setSceneCamera(),               up: () => {}                  },
+    Digit2: { down: () => setPrinterCamera(),             up: () => {}                  },
+    Digit3: { down: () => setShelvesCamera(),             up: () => {}                  },
+    Digit4: { down: () => camera = customCams.carDriver,  up: () => {}                  },
+    Digit5: { down: () => camera = customCams.carBack,    up: () => {}                  },
+    Digit6: { down: () => camera = customCams.carSide,    up: () => {}                  },
+  });
 
   render();
+})();
 
+function availableSlots() {
+  if(printer.inProgress()) {
+    return shelves.slots;
+  } else {
+    return [...shelves.slots, printer.pieceSlot];
+  }
 }
 
 function setupGui() {
+  let gui = new GUI();
 
-  effectController = {
-    newTess: 15,
-    bottom: true,
-    lid: true,
-    body: true,
-    fitLid: false,
-    nonblinn: false,
-    newShading: 'glossy'
-  };
+  let geoGui = gui.addFolder('Geometries');
+  geoGui.add(guiController, 'geoCode',         Object.keys(geometries)).name('Code');
+  geoGui.add(guiController, 'geoAngle',        0, 180)                 .name('Angle');
+  geoGui.add(guiController, 'geoHeight',       1, 100/3)               .name('Height');
+  geoGui.add(guiController, 'geoWidth',        1, 50/3)                .name('Width');
+  geoGui.add(guiController, 'geoResolution',   10, 60)                 .name('Resolution');
+  geoGui.add(guiController, 'geoMaterial',     Object.keys(materials)) .name('Material');
 
-  const gui = new GUI();
-  gui.add( effectController, 'newTess', [ 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 50 ] ).name( 'Tessellation Level' ).onChange( render );
-  gui.add( effectController, 'lid' ).name( 'display lid' ).onChange( render );
-  gui.add( effectController, 'body' ).name( 'display body' ).onChange( render );
-  gui.add( effectController, 'bottom' ).name( 'display bottom' ).onChange( render );
-  gui.add( effectController, 'fitLid' ).name( 'snug lid' ).onChange( render );
-  gui.add( effectController, 'nonblinn' ).name( 'original scale' ).onChange( render );
-  gui.add( effectController, 'newShading', [ 'wireframe', 'flat', 'smooth', 'glossy', 'textured', 'reflective' ] ).name( 'Shading' ).onChange( render );
+  geoGui.open();
 
+  gui.add(guiController, 'render');
 }
 
+function onWindowResize() {
+  const canvasWidth = window.innerWidth;
+  const canvasHeight = window.innerHeight;
 
-//
+  renderer.setSize(canvasWidth, canvasHeight);
+
+  camera.aspect = canvasWidth / canvasHeight;
+  camera.updateProjectionMatrix();
+}
+
+function update() {
+  forklift.update();
+}
 
 function render() {
-
-  if ( effectController.newTess !== tess ||
-    effectController.bottom !== bBottom ||
-    effectController.lid !== bLid ||
-    effectController.body !== bBody ||
-    effectController.fitLid !== bFitLid ||
-    effectController.nonblinn !== bNonBlinn ||
-    effectController.newShading !== shading ) {
-
-    tess = effectController.newTess;
-    bBottom = effectController.bottom;
-    bLid = effectController.lid;
-    bBody = effectController.body;
-    bFitLid = effectController.fitLid;
-    bNonBlinn = effectController.nonblinn;
-    shading = effectController.newShading;
-
-    createNewTeapot();
-
-  }
-
-  // skybox is rendered separately, so that it is always behind the teapot.
-  if ( shading === 'reflective' ) {
-
-    scene.background = textureCube;
-
-  } else {
-
-    scene.background = null;
-
-  }
-
-  renderer.render( scene, camera );
-
+  requestAnimationFrame(render);
+  update();
+  renderer.render(scene, camera);
 }
 
-// Whenever the teapot changes, the scene is rebuilt from scratch (not much to it).
-function createNewTeapot() {
+/* ------------------ Cameras -----------------*/
 
-  if ( teapot !== undefined ) {
+function setSceneCamera() {
+  baseCamera.position.set(-100, 100, 100);
 
-    teapot.geometry.dispose();
-    scene.remove( teapot );
+  cameraControls.target.set(0, 40, 0);
 
-  }
+  cameraControls.update();
+  camera = baseCamera;
+}
 
-  const geometry = new TeapotGeometry( teapotSize,
-    tess,
-    effectController.bottom,
-    effectController.lid,
-    effectController.body,
-    effectController.fitLid,
-    ! effectController.nonblinn );
+function setPrinterCamera() {
+  baseCamera.position.set(-100, 100, 100);
 
-  teapot = new THREE.Mesh( geometry, materials[ shading ] );
+  const target = new THREE.Vector3();
+  printer.mesh.getWorldPosition(target);
+  cameraControls.target.copy(target);
 
-  scene.add( teapot );
+  cameraControls.update();
+  camera = baseCamera;
+}
 
+function setShelvesCamera() {
+  baseCamera.position.set(-100, 100, 100);
+
+  const target = new THREE.Vector3();
+  shelves.mesh.getWorldPosition(target);
+  target.y += 50;
+  target.z -= 90;
+  cameraControls.target.copy(target);
+
+  cameraControls.update();
+  camera = baseCamera;
+}
+
+function createDriverCamera() {
+  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, 550);
+  camera.position.y = 25;
+  camera.position.z = -10;
+  camera.rotation.y = -Math.PI / 2;
+
+  forklift.mesh.add(camera);
+  return camera
+}
+
+function createBackCamera() {
+  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, 550);
+  camera.position.y = 60;
+  camera.position.x = -70;
+  camera.rotation.y = -Math.PI / 2;
+
+  forklift.mesh.add(camera);
+  return camera
+}
+
+function createSideCamera() {
+  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, 550);
+  camera.position.y = 60;
+  camera.position.z = 75;
+
+  forklift.mesh.add(camera);
+  return camera
 }

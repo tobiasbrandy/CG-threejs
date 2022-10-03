@@ -2,17 +2,18 @@
 <html lang="en">
   <head>
     <title>Three.js - TP1</title>
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
     <link type="text/css" rel="stylesheet" href="css/main.css">
 
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.6.0/dist/es-module-shims.js"></script>
+    <script async src="/libs/importmap/es-module-shims.min.js"></script>
     <script type="importmap">
       {
         "imports": {
-          "three":          "/three/three.module.js",
-          "three/addons/":  "/three/addons/"
+          "three":          "/libs/three/three.module.js",
+          "three/addons/":  "/libs/three/addons/"
         }
       }
     </script>
@@ -20,5 +21,6 @@
     <script type="module" src="js/main.js"></script>
   </head>
   <body>
+    <div id="container"></div>
   </body>
 </html>
