@@ -5,7 +5,7 @@ import PieceSlot from './pieceSlot.js';
 const CAR_SPEED   = 2;
 const LIFT_SPEED  = 1;
 const ROT_SPEED   = 0.02;
-const WHEEL_SPEED = 0.1;
+const WHEEL_SPEED = 0.04;
 
 const LIFT_MIN = 10;
 
@@ -16,7 +16,6 @@ export default class Forklift {
     this.height     = height;
     this.pieceSlot  = new PieceSlot();
     this.mesh       = this.createMesh(position, width, length);
-    this.wheels     = this.createWheels();
     this.speed      = 0;
     this.rotSpeed   = 0;
     this.liftSpeed  = 0;
@@ -178,6 +177,12 @@ export default class Forklift {
     }
 
     this.mesh.translateX(this.speed);
+
+    const rotSpeed = Math.sign(this.speed) * WHEEL_SPEED * 2*Math.PI;
+    this.wheels[0].rotateY(-rotSpeed);
+    this.wheels[1].rotateY(rotSpeed);
+    this.wheels[2].rotateY(-rotSpeed);
+    this.wheels[3].rotateY(rotSpeed);
   }
 
   rotateRight() {
