@@ -113,6 +113,6 @@ export default class Printer {
   }
 
   inProgress() {
-    this.pieceProgress !== 0;
+    return this.pieceProgress !== 0;
   }
 }
