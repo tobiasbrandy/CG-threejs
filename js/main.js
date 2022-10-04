@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { GUI } from '/libs/gui/dat.gui.module.js';
+import { GUI } from './libs/gui/dat.gui.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import geometries from './geometries.js';
