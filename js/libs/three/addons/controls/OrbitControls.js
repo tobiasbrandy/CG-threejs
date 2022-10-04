@@ -99,6 +99,16 @@ class OrbitControls extends EventDispatcher {
 		// public methods
 		//
 
+    this.zoomIn = function () {
+			dollyIn(getZoomScale());
+			scope.update();
+		};
+
+		this.zoomOut = function () {
+			dollyOut(getZoomScale());
+			scope.update();
+		}
+
 		this.getPolarAngle = function () {
 
 			return spherical.phi;

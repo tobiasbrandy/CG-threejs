@@ -118,6 +118,8 @@ let scene, renderer, camera;
     KeyQ:   { down: () => forklift.startLiftUp(),         up: () => forklift.stopLift() },
     KeyE:   { down: () => forklift.startLiftDown(),       up: () => forklift.stopLift() },
     KeyG:   { down: () => forklift.handlePiece(availableSlots()), up: () => {}          },
+    KeyO:   { down: () => cameraControls.zoomIn(),        up: () => {}                  },
+    KeyP:   { down: () => cameraControls.zoomOut(),       up: () => {}                  },
     Digit1: { down: () => setSceneCamera(),               up: () => {}                  },
     Digit2: { down: () => setPrinterCamera(),             up: () => {}                  },
     Digit3: { down: () => setShelvesCamera(),             up: () => {}                  },
