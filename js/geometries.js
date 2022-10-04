@@ -109,10 +109,11 @@ class ExcrutionGeometry extends AbstractGeometry {
 
 /* --------------------- Curves ------------------------ */
 
-function A1curve(height, width) {
-  const curve = new THREE.Path();
+function createA1Curve(height, width) {
   const d = width / 2 / 10;
   const h = height / 10;
+
+  const curve = new THREE.Path();
 
   curve.add(new THREE.LineCurve(
       new THREE.Vector2(0, 0),
@@ -128,7 +129,6 @@ function A1curve(height, width) {
       new THREE.Vector2(8 * d, 2 * h),
       new THREE.Vector2(2*d, 2.5 * h)
   ));
-
 
   curve.add(new THREE.CubicBezierCurve(
       new THREE.Vector2(2*d, 2.5 * h),
@@ -155,11 +155,92 @@ function A1curve(height, width) {
   return curve;
 }
 
-function B1curve(length) {
+function createA2Curve(height, width) {
+  const d = width / 2 / 10;
+  const h = height / 8;
+
+  const curve = new THREE.CurvePath();
+
+  curve.add(new THREE.SplineCurve([
+      new THREE.Vector2(0, 0),
+      new THREE.Vector2(4 * d, 0),
+      new THREE.Vector2(5 * d, h),
+      new THREE.Vector2(3 * d, 5 * h),
+      new THREE.Vector2(5 * d, 7 * h),
+      new THREE.Vector2(4 * d, 7.5 * h),
+      new THREE.Vector2(3.8 * d, 8 * h)
+  ]));
+
+  return curve;
+}
+
+function createA3Curve(height, width) {
+  const d = width / 2 / 10;
+  const h = height / 9;
+
+  const curve = new THREE.CurvePath();
+
+  curve.add(new THREE.LineCurve(
+      new THREE.Vector2(0, 0),
+      new THREE.Vector2(10 * d, 0)
+  ));
+
+  curve.add(new THREE.LineCurve(
+      new THREE.Vector2(10 * d, 0),
+      new THREE.Vector2(3 * d, h)
+  ));
+
+  curve.add(new THREE.LineCurve(
+      new THREE.Vector2(3 * d, h),
+      new THREE.Vector2(3 * d, 2 * h)
+  ));
+
+  curve.add(new THREE.SplineCurve([
+      new THREE.Vector2(3 * d, 2 * h),
+      new THREE.Vector2(6 * d, 3 * h),
+      new THREE.Vector2(6 * d, 7 * h),
+      new THREE.Vector2(4 * d, 8 * h),
+      new THREE.Vector2(d, 9 * h)
+  ]));
+
+  return curve;
+}
+
+function createA4Curve(height, width) {
+  const d = width / 2 / 10;
+  const h = height / 7.3;
+
+  const curve = new THREE.CurvePath();
+
+  curve.add(new THREE.SplineCurve([
+      new THREE.Vector2(0, 0),
+      new THREE.Vector2(5 * d, 0),
+      new THREE.Vector2(6 * d, 0.5 * h),
+      new THREE.Vector2(6 * d, 1.5 * h),
+      new THREE.Vector2(5 * d, 2 * h),
+      new THREE.Vector2(3 * d, 2.2 * h),
+      new THREE.Vector2(2.8 * d, 2.6* h),
+      new THREE.Vector2(5 * d, 3.5 * h),
+      new THREE.Vector2(8 * d, 4 * h),
+  ]));
+  
+  curve.add(new THREE.SplineCurve([
+      new THREE.Vector2(8 * d, 4 * h),
+      new THREE.Vector2(4 * d, 4.3 * h),
+      new THREE.Vector2(3* d, 6.5 * h),
+      new THREE.Vector2(2.5* d, 7 * h),
+      new THREE.Vector2(0, 7.3 * h),
+  ]));
+
+  return curve;
+}
+
+function createB1Curve(length) {
   const len = length/2;
   const rot = 2/3*Math.PI;
 
   const curve = new THREE.Path();
+  
   curve.moveTo(len * Math.cos(1*rot), len * Math.sin(1*rot));
   curve.lineTo(len * Math.cos(2*rot), len * Math.sin(2*rot));
   curve.lineTo(len * Math.cos(3*rot), len * Math.sin(3*rot));
@@ -168,9 +249,101 @@ function B1curve(length) {
   return curve;
 }
 
+function createB2Curve(length) {
+  const n     = 7;
+  const long  = length * 3 / 4;
+  const short = length * 3 / 8;
+
+  const curve = new THREE.Path();
+
+  curve.moveTo(long, 0);
+
+  for(let i = 1; i <= 2 * n; i +=2) {
+    const a1 = (i + 0) / n * Math.PI;
+    const a2 = (i + 1) / n * Math.PI;
+
+    curve.quadraticCurveTo(
+      Math.cos(a1) * short,  Math.sin(a1) * short, 
+      Math.cos(a2) * long,   Math.sin(a2) * long,
+    );
+  }
+
+  return curve;
+}
+
+function createB3Curve(length) {
+  const d = length / 13;
+
+  const curve = new THREE.Path();
+
+  curve.moveTo(-3 * d, -2 * d);
+  curve.lineTo(-6 * d, -2 * d);
+  curve.splineThru([
+      new THREE.Vector2(-6 * d, -2 * d),
+      new THREE.Vector2(-6 * d, -6 * d),
+      new THREE.Vector2(-2 * d, -6 * d),
+  ]);
+  curve.lineTo(-2 * d, -3 * d);
+  curve.lineTo(2 * d, -3 * d);
+  curve.lineTo(2 * d, -6 * d);
+  curve.splineThru([
+      new THREE.Vector2(2 * d, -6 * d),
+      new THREE.Vector2(6 * d, -6 * d),
+      new THREE.Vector2(6 * d, -2 * d),
+  ]);
+  curve.lineTo(3 * d, -2 * d);
+  curve.lineTo(3 * d, 2 * d);
+  curve.lineTo(6 * d, 2 * d);
+  curve.splineThru([
+      new THREE.Vector2(6 * d, 2 * d),
+      new THREE.Vector2(6 * d, 6 * d),
+      new THREE.Vector2(2 * d, 6 * d),
+  ]);
+  curve.lineTo(2 * d, 3 * d);
+  curve.lineTo(-2 * d, 3 * d);
+  curve.lineTo(-2 * d, 6 * d);
+  curve.splineThru([
+      new THREE.Vector2(-2 * d, 6 * d),
+      new THREE.Vector2(-6 * d, 6 * d),
+      new THREE.Vector2(-6 * d, 2 * d),
+  ]);
+  curve.lineTo(-3 * d, 2 * d);
+  curve.closePath();
+
+  return curve;
+}
+
+function createB4Curve(length) {
+  const d = length / 11;
+
+  const curve = new THREE.Path();
+
+  curve.moveTo(-d, -4 * d);
+  curve.absarc(
+      0, -4 * d,
+      d,
+      Math.PI, 0
+  );
+  curve.lineTo(d, 4 * d);
+  curve.absarc(
+      0, 4 * d,
+      d,
+      0, Math.PI
+  );
+  curve.closePath();
+
+  return curve;
+}
+
 /* ------------ Exports ---------------- */
 
 export default {
-  'A1': new RevolutionGeometry('A1', A1curve),
-  'B1': new ExcrutionGeometry ('B1', B1curve),
+  'A1': new RevolutionGeometry('A1', createA1Curve),
+  'A2': new RevolutionGeometry('A2', createA2Curve),
+  'A3': new RevolutionGeometry('A3', createA3Curve),
+  'A4': new RevolutionGeometry('A4', createA4Curve),
+  'B1': new ExcrutionGeometry ('B1', createB1Curve),
+  'B2': new ExcrutionGeometry ('B2', createB2Curve),
+  'B3': new ExcrutionGeometry ('B3', createB3Curve),
+  'B4': new ExcrutionGeometry ('B4', createB4Curve),
 };
