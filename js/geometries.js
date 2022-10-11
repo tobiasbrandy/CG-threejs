@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from './libs/three/three.module.js';
 
 const Y_AXIS      = new THREE.Vector3(0, 1, 0);
 const POS_DIM     = 3;

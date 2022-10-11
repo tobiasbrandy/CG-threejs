@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from './libs/three/three.module.js';
 
 export function createWarehouse(wallSize, wallDistance) {
   const warehouse = new THREE.Group();

@@ -1,7 +1,6 @@
-import * as THREE from 'three';
-
+import * as THREE from './libs/three/three.module.js';
+import { OrbitControls } from './libs/three/addons/controls/OrbitControls.js';
 import { GUI } from './libs/gui/dat.gui.module.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import geometries from './geometries.js';
 import Printer from './printer.js';
@@ -147,7 +146,7 @@ function setupGui() {
   geoGui.add(guiController, 'geoAngle',        0, 180)                 .name('Angle');
   geoGui.add(guiController, 'geoHeight',       1, 100/3)               .name('Height');
   geoGui.add(guiController, 'geoWidth',        1, 50/3)                .name('Width');
-  geoGui.add(guiController, 'geoResolution',   10, 60)                 .name('Resolution');
+  geoGui.add(guiController, 'geoResolution',   20, 60)                 .name('Resolution');
   geoGui.add(guiController, 'geoMaterial',     Object.keys(materials)) .name('Material');
 
   geoGui.open();
