@@ -1,7 +1,7 @@
 # CG-threejs
 
 ## Demo para curso de Computer Graphics en Three.js
-Actualmente desplegado en [https://cg.tobiasbrandy.com]
+Actualmente desplegado en https://cg.tobiasbrandy.com
 
 ### Objetivo
 El objetivo de la demo es poder controlar un vehiculo con el teclado, generar ciertas piezas especificadas simulando una impresora 3D utilizando una interfaz grafica, y luego poder agarrar y dejar las mismas con el vehiculo en una estanteria o nuevamente en la impresora.
