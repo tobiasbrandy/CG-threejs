@@ -75,6 +75,9 @@ let scene, renderer, camera;
   renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement);
 
+  // Resize
+  window.addEventListener('resize', onWindowResize);
+
   // Camera
   baseCamera = new THREE.PerspectiveCamera(100, initWindowRatio, 1, 800);
 
@@ -91,9 +94,6 @@ let scene, renderer, camera;
   const ambientLight = new THREE.AmbientLight(0x333333);
   const light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
   light.position.set(32, 39, 70);
-
-  // Resize
-  window.addEventListener('resize', onWindowResize);
 
   // Scene
   scene = new THREE.Scene();
