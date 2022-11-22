@@ -11,6 +11,8 @@ import Shelves from './shelves.js';
 import { createWarehouse } from './warehouse.js';
 import { createSpotlights } from './spotlights.js';
 
+const CAMERA_FAR = 2000;
+
 const initWindowRatio = window.innerWidth / window.innerHeight;
 
 const materials = {
@@ -90,7 +92,7 @@ let scene, renderer, camera;
   window.addEventListener('resize', onWindowResize);
 
   // Camera
-  baseCamera = new THREE.PerspectiveCamera(100, initWindowRatio, 1, 2000);
+  baseCamera = new THREE.PerspectiveCamera(100, initWindowRatio, 1, CAMERA_FAR);
 
   // Camera controlls
   cameraControls = new OrbitControls(baseCamera, renderer.domElement);
@@ -216,7 +218,7 @@ function setShelvesCamera() {
 }
 
 function createDriverCamera() {
-  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, 550);
+  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, CAMERA_FAR);
   camera.position.y = 25;
   camera.position.z = -10;
   camera.rotation.y = -Math.PI / 2;
@@ -226,7 +228,7 @@ function createDriverCamera() {
 }
 
 function createBackCamera() {
-  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, 550);
+  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, CAMERA_FAR);
   camera.position.y = 60;
   camera.position.x = -70;
   camera.rotation.y = -Math.PI / 2;
@@ -236,7 +238,7 @@ function createBackCamera() {
 }
 
 function createSideCamera() {
-  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, 550);
+  const camera = new THREE.PerspectiveCamera(90, initWindowRatio, 1, CAMERA_FAR);
   camera.position.y = 60;
   camera.position.z = 75;
 
