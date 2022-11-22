@@ -1,5 +1,6 @@
 import * as THREE from './libs/three/three.module.js';
 
+import { textureLoader, tiled } from './textures.js';
 import PieceSlot from './pieceSlot.js';
 
 const MIN_HEIGHT = 20;
@@ -22,7 +23,7 @@ export default class Shelves {
     }
 
     const colM    = new THREE.MeshLambertMaterial({ color: 0xEEEEEE });
-    const shelfM  = new THREE.MeshLambertMaterial({ color: 0x00EEEE });
+    const shelfM  = new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('shelves/shelf.png'), 10) });
 
     const colG    = new THREE.BoxGeometry(1, MIN_HEIGHT + height * SHELF_H, 1);
     const shelfG  = new THREE.BoxGeometry(width * SHELF_W, 1, SHELF_W);

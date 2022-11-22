@@ -21,11 +21,24 @@ class RevolutionGeometry extends AbstractGeometry {
   create(height, width, resolution, percentage) {  
     const curve = this.curveSupplier(height, width);
     
-    const points = curve.getSpacedPoints(resolution);
-    const pointCount = points.length;
-    const stepCount = Math.ceil(pointCount * percentage / 100);
+    const points      = curve.getSpacedPoints(resolution);
+    const pointCount  = points.length;
+    const stepCount   = Math.ceil(pointCount * percentage / 100);
+    const geomPoints  = points.slice(0, stepCount);
+    const segments    = pointCount;
+
+    // UV
+    const uv = [];
+    for(let i = 0; i <= segments; i++) {
+			for(let j = 0; j <= stepCount - 1; j++) {
+        uv.push(i / segments, j / (pointCount - 1));
+      }
+    }
   
-    return new THREE.LatheGeometry(points.slice(0, stepCount), 50);
+    const geometry = new THREE.LatheGeometry(geomPoints, segments);
+    geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uv), 2));
+
+    return geometry;
   }
 }
 
@@ -41,27 +54,43 @@ class ExcrutionGeometry extends AbstractGeometry {
     const curve       = this.curveSupplier(width);
     const stepSize    = height / resolution;
     const angleStep   = THREE.MathUtils.degToRad(angle) / resolution;
-    const basePoints  = curve.getPoints(curveSampleCount);
+    const basePoints  = curve.getSpacedPoints(curveSampleCount);
     const pointCount  = basePoints.length;
     const stepCount   = Math.ceil(resolution * percentage / 100);
   
     const position  = [];
+    const uv        = [];
     const index     = [];
     const normal    = [];
 
     let bottom = basePoints.map(v => new THREE.Vector3(v.x, 0, v.y));
     let top;
   
-    // Position and index calculation
+    // Position, uv and index calculation
     for(let step = 0, idx = 0; step < stepCount; step++) {
       top = basePoints.map(v => new THREE.Vector3(v.x, (step + 1) * stepSize, v.y).applyAxisAngle(Y_AXIS, (step + 1) * angleStep));
   
       for(let i = 0; i < pointCount - 1; i++, idx += STEP_POINTS) {
+        // Position
         position.push(...bottom[i]    .toArray()); // left down
         position.push(...bottom[i + 1].toArray()); // right down
         position.push(...top[i]       .toArray()); // left up
         position.push(...top[i + 1]   .toArray()); // right up
-    
+
+        // UV
+        const uLeft   = i;
+        const uRight  = i + 1;
+        const uMod    = pointCount - 1;
+        const vBot    = step;
+        const vTop    = step + 1;
+        const vMod    = resolution;
+
+        uv.push(uLeft   / uMod, vBot / vMod); // left down
+        uv.push(uRight  / uMod, vBot / vMod); // right down
+        uv.push(uLeft   / uMod, vTop / vMod); // left up
+        uv.push(uRight  / uMod, vTop / vMod); // right up
+
+        // Index
         const leftDown  = idx + 0;
         const rightDown = idx + 1;
         const leftUp    = idx + 2;
@@ -101,6 +130,7 @@ class ExcrutionGeometry extends AbstractGeometry {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(position), POS_DIM));
     geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(normal),   POS_DIM));
+    geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(uv),       2));
     geometry.setIndex(index);
   
     return geometry;

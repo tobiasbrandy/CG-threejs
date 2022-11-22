@@ -1,5 +1,6 @@
 import * as THREE from './libs/three/three.module.js';
 
+import { textureLoader } from './textures.js';
 import PieceSlot from './pieceSlot.js';
 
 const CAR_SPEED   = 2;
@@ -24,12 +25,14 @@ export default class Forklift {
   createMesh(position, width, length) {
     const mesh = new THREE.Group();
 
-    const main = new THREE.Mesh(
-      new THREE.BoxGeometry(length, 15, width),
-      new THREE.MeshLambertMaterial({ color: 0x0000FF })
-    );
-    main.position.y = 12;
-    mesh.add(main);
+    const bodyG = new THREE.BoxGeometry(length, 15, width);
+    const bodyM = new THREE.MeshPhongMaterial({
+      map:        textureLoader.load('forklift/body.jpg'),
+      normalMap:  textureLoader.load('forklift/body_normal.jpg'),
+    });
+    const body  = new THREE.Mesh(bodyG, bodyM);
+    body.position.y = 12;
+    mesh.add(body);
 
     const cabin = new THREE.Mesh(
       new THREE.BoxGeometry(33, 12, 24),
@@ -115,16 +118,10 @@ export default class Forklift {
   createWheel(radius, width, side) {
     const wheel = new THREE.Group();
 
-    const geom = new THREE.CylinderGeometry(radius, radius, width, 32);
-    const mat = new THREE.MeshLambertMaterial({ color: 0x999999 });
-    wheel.add(new THREE.Mesh(geom, mat));
-
-    const pGeom = new THREE.CylinderGeometry(radius/10, radius/10, width/10, 32);
-    const pMat = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
-    const pMesh = new THREE.Mesh(pGeom, pMat);
-    pMesh.position.x -= 4/5*radius;
-    pMesh.position.y += width/2;
-    wheel.add(pMesh);
+    const wheelG  = new THREE.CylinderGeometry(radius, radius, width, 32);
+    const wheelMT = new THREE.MeshPhongMaterial({ map: textureLoader.load('forklift/wheel.jpg') });
+    const wheelMM = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    wheel.add(new THREE.Mesh(wheelG, [wheelMM, wheelMT, wheelMM]));
 
     wheel.rotateX(side * Math.PI/2);
     wheel.position.y += radius;

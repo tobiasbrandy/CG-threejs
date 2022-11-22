@@ -1,11 +1,17 @@
 import * as THREE from './libs/three/three.module.js';
 
+import { textureLoader, tiled } from './textures.js';
+
 export function createWarehouse(wallSize, wallDistance) {
   const warehouse = new THREE.Group();
 
   const plane = new THREE.BoxGeometry(wallSize, wallSize, 1);
 
-  const floorM = new THREE.MeshLambertMaterial({ color: 0x444444 }); 
+  const floorM = new THREE.MeshPhongMaterial({
+    map:        tiled(textureLoader.load('warehouse/floor.png'),        10),
+    normalMap:  tiled(textureLoader.load('warehouse/floor_normal.png'), 10),
+  });
+
   const floor = new THREE.Mesh(plane, floorM);
   floor.rotateX(-Math.PI/2);
   floor.position.y = 0;
@@ -13,7 +19,10 @@ export function createWarehouse(wallSize, wallDistance) {
   warehouse.add(floor);
 
   const walls = new THREE.Group();
-  const wallM = new THREE.MeshLambertMaterial({ color: 0xadd8e6 }); 
+  const wallM = new THREE.MeshLambertMaterial({
+    map:        tiled(textureLoader.load('warehouse/wall.png'),         10),
+    normalMap:  tiled(textureLoader.load('warehouse/wall_normal.png'),  10),
+  }); 
 
   const wall1 = new THREE.Mesh(plane, wallM);
   wall1.rotateX(-Math.PI);

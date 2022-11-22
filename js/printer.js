@@ -1,5 +1,6 @@
 import * as THREE from './libs/three/three.module.js';
 
+import { textureLoader, cubeTextureLoader } from './textures.js';
 import PieceSlot from './pieceSlot.js';
 
 const SEGMENTS          = 32;
@@ -24,16 +25,34 @@ export default class Printer {
     this.pieceSlot = new PieceSlot();
     this.mesh.add(this.pieceSlot.mesh);
 
-    const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(this.radius, this.radius, this.baseHeight, SEGMENTS),
-      new THREE.MeshLambertMaterial({ color: 0x999999 })
-    );
+    const textureCube = cubeTextureLoader.load([
+      'printer/body_env_right.jpg',
+      'printer/body_env_left.jpg',
+      'printer/body_env_top.jpg',
+      'printer/body_env_bottom.jpg',
+      'printer/body_env_front.jpg',
+      'printer/body_env_back.jpg', 
+    ]);
+    textureCube.format  = THREE.RGBAFormat;
+    textureCube.mapping = THREE.CubeReflectionMapping;
+
+    const baseG = new THREE.CylinderGeometry(this.radius, this.radius, this.baseHeight, SEGMENTS);
+    const baseM = new THREE.MeshPhongMaterial({ 
+      specular:     0x888888,
+      shininess:    120,
+      envMap:       textureCube,
+      reflectivity: 1,
+      emissive:     0x333333,
+      map:          textureLoader.load('printer/body.png'),
+    });
+    const base = new THREE.Mesh(baseG, baseM);
     base.position.y -= this.baseHeight/2;
     this.mesh.add(base);
 
+    const liftM = new THREE.MeshLambertMaterial({ color: 0xffdd00 });
     const lift = new THREE.Mesh(
       new THREE.CylinderGeometry(this.radius/10, this.radius/10, this.liftHeight, SEGMENTS),
-      new THREE.MeshLambertMaterial({ color: 0xffdd00 })
+      liftM
     );
     lift.position.x -= 4/5*this.radius;
     lift.position.y += this.liftHeight/2;
@@ -67,14 +86,38 @@ export default class Printer {
     head.add(handle2);
 
     const topLen = 4/5*this.radius;
+    const topGroup = new THREE.Group();
+
     const top = new THREE.Mesh(new THREE.BoxGeometry(topLen, topWidth, topLen), greenM);
-    top.position.x = handle2.position.x;
-    top.position.y -= handleSize/2;
-    head.add(top);
+    topGroup.add(top);
+
+    topGroup.add(this.createTopLight(new THREE.Vector3( topLen/2, topWidth/2,  topLen/2)));
+    topGroup.add(this.createTopLight(new THREE.Vector3(-topLen/2, topWidth/2,  topLen/2)));
+    topGroup.add(this.createTopLight(new THREE.Vector3( topLen/2, topWidth/2, -topLen/2)));
+    topGroup.add(this.createTopLight(new THREE.Vector3(-topLen/2, topWidth/2, -topLen/2)));
+
+    topGroup.position.x  = handle2.position.x;
+    topGroup.position.y -= handleSize/2;
+    head.add(topGroup);
 
     head.position.y += handleSize/2 + topWidth;
 
     return head;
+  }
+
+  createTopLight(position) {
+    const ret = new THREE.Group();
+
+    const light = new THREE.PointLight(0x0000FF, 1, 40);
+    ret.add(light);
+
+    const bodyG = new THREE.SphereGeometry(1);
+    const bodyM = new THREE.MeshBasicMaterial({ color: 0x3333FF });
+    const body = new THREE.Mesh(bodyG, bodyM);
+    ret.add(body);
+
+    ret.position.copy(position);
+    return ret;
   }
 
   renderPiece(geomBuilder, height, width, resolution, angle, material, curveSampleCount = 50) {

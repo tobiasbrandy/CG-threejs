@@ -2,12 +2,14 @@ import * as THREE from './libs/three/three.module.js';
 import { OrbitControls } from './libs/three/addons/controls/OrbitControls.js';
 import { GUI } from './libs/gui/dat.gui.module.js';
 
+import { textureLoader, tiled } from './textures.js';
 import geometries from './geometries.js';
 import Printer from './printer.js';
 import Forklift from './forklift.js';
 import bindInputHandlers from './input.js';
 import Shelves from './shelves.js';
 import { createWarehouse } from './warehouse.js';
+import { createSpotlights } from './spotlights.js';
 
 const initWindowRatio = window.innerWidth / window.innerHeight;
 
@@ -16,6 +18,15 @@ const materials = {
   flat:       new THREE.MeshPhongMaterial({ specular: 0x000000, flatShading: true, side: THREE.DoubleSide }),
   smooth:     new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }),
   glossy:     new THREE.MeshPhongMaterial({ color: 0xAA0000, side: THREE.DoubleSide }),
+  wave:       new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('geometry/wave_A.png'),    3),   side: THREE.DoubleSide }),
+  circleA:    new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('geometry/circle_A.png'),  15),  side: THREE.DoubleSide }),
+  circleB:    new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('geometry/circle_B.png'),  15),  side: THREE.DoubleSide }),
+  circleC:    new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('geometry/circle_C.png'),  15),  side: THREE.DoubleSide }),
+  diamondA:   new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('geometry/diamond_A.png'), 15),  side: THREE.DoubleSide }),
+  diamondB:   new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('geometry/diamond_B.png'), 15),  side: THREE.DoubleSide }),
+  diamondC:   new THREE.MeshPhongMaterial({ map: tiled(textureLoader.load('geometry/diamond_C.png'), 15),  side: THREE.DoubleSide }),
+  marbleA:    new THREE.MeshPhongMaterial({ map: textureLoader.load('geometry/marble_A.png'),              side: THREE.DoubleSide }),
+  marbleB:    new THREE.MeshPhongMaterial({ map: textureLoader.load('geometry/marble_B.png'),              side: THREE.DoubleSide }),
 };
 
 const guiController = {
@@ -79,7 +90,7 @@ let scene, renderer, camera;
   window.addEventListener('resize', onWindowResize);
 
   // Camera
-  baseCamera = new THREE.PerspectiveCamera(100, initWindowRatio, 1, 800);
+  baseCamera = new THREE.PerspectiveCamera(100, initWindowRatio, 1, 2000);
 
   // Camera controlls
   cameraControls = new OrbitControls(baseCamera, renderer.domElement);
@@ -90,17 +101,12 @@ let scene, renderer, camera;
   // Default camera
   setSceneCamera();
 
-  // Lights
-  const ambientLight = new THREE.AmbientLight(0x333333);
-  const light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
-  light.position.set(32, 39, 70);
-
   // Scene
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
 
-  scene.add(ambientLight);
-  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x333333, 0.5));
+  createSpotlights(scene);
 
   scene.add(printer.mesh);
   scene.add(forklift.mesh);
